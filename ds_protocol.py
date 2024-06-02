@@ -107,8 +107,9 @@ def ret_friends(client, token, type):
   messages = tup.message
   friendL = []
   for item in messages:
-    #print(item)
-    friendL.append(item['from'])
+    print(item)
+    if item['from'] not in friendL:
+      friendL.append(item['from'])
   return friendL
 
 def ret_msg_only(client, token, type):

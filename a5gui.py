@@ -170,6 +170,9 @@ class MainApp(tk.Frame):
         # into the root frame
         self._draw()
         self.body.insert_contact("studentexw23") # adding one example student.
+        contacts = self.direct_messenger.all_friends()
+        for names in contacts:
+            self.body.insert_contact(names)
 
     def send_message(self):
         # You must implement this!
@@ -179,6 +182,7 @@ class MainApp(tk.Frame):
         #print(self.recipient)
         self.body.insert_user_message(message)
         self.direct_messenger.send(message, self.recipient)
+        self.body.message_editor.delete(1.0,tk.END)
 
     def add_contact(self):
         # You must implement this!

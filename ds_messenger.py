@@ -62,6 +62,10 @@ class DirectMessenger:
     all_msg_list = protocol.ret_msg_from_sender(self.socket,self.token, friend, 'all')
     return all_msg_list
   
+  def all_friends(self):
+    friendList = protocol.ret_friends(self.socket, self.token, 'all')
+    return friendList
+  
   def get_new_from_friend(self,friend):
     new_msg_list = protocol.ret_msg_from_sender(self.socket,self.token, friend, 'new')
     return new_msg_list
