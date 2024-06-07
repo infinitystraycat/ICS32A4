@@ -83,6 +83,7 @@ def send(server: str, port: int, username: str, password: str,
     
 
 
+
 def join_as_user(client, usr, pwd):
     '''
     Logs in using the provided username and password,
@@ -113,5 +114,6 @@ def connect(host):
         print('connect successful')
         return client_socket
     except Exception as e:
-        print('error')
-        print(e)
+        print('error connecting to server')
+        #print(e)
+        return False

@@ -10,8 +10,10 @@
 # 66943792
 
 import json
+import time
 from collections import namedtuple
 TIMESTAMP = "1603167689.3928561"
+from Profile import Profile
 
 # Namedtuple to hold the values retrieved from json messages.
 # TODO: update this named tuple to use DSP protocol keys
@@ -19,28 +21,29 @@ DataTuple = namedtuple('DataTuple', ["type", "message", "token"])
 
 
 def extract_json(json_msg: str) -> DataTuple:
-  '''
-  Call the json.loads function on a json string and convert
-  it to a DataTuple object
-  TODO: replace the pseudo placeholder keys with actual
-  DSP protocol keys
-  '''
-  try:
-    json_obj = json.loads(json_msg)
-    type = json_obj["response"]['type']
-    message = json_obj["response"]["message"]
-    if str(type) == 'error':
-      print('Error: ' + str(message))
-    token = json_obj["response"]["token"]
-  except json.JSONDecodeError as e:
-    if str(type) == 'error':
-      print('Error: ' + str(message))
-    print("Json cannot be decoded.")
-    print(e)
-  return DataTuple(type, message, token)
+    '''
+    Call the json.loads function on a json string and convert
+    it to a DataTuple object
+    TODO: replace the pseudo placeholder keys with actual
+    DSP protocol keys
+    '''
+    try:
+      json_obj = json.loads(json_msg)
+      type = json_obj["response"]['type']
+      message = json_obj["response"]["message"]
+      if str(type) == 'error':
+        print('Error: ' + str(message))
+      token = json_obj["response"]["token"]
+    except json.JSONDecodeError as e:
+      if str(type) == 'error':
+        print('Error: ' + str(message))
+      print("Json cannot be decoded.")
+      print(e)
+    return DataTuple(type, message, token)
 
 MessageTuple = namedtuple('MessageTuple', ["type", "message"])
-def extract_json_dm(json_msg: str) -> DataTuple:
+
+def extract_json_dm(json_msg: str) -> MessageTuple:
   '''
   Call the json.loads function on a json string and convert
   it to a DataTuple object
@@ -61,45 +64,31 @@ def extract_json_dm(json_msg: str) -> DataTuple:
   return MessageTuple(type, message)
 
 
-def send_msg(client, token, recipient, message ):
-  try:
-    send = client.makefile('w')
-    recv = client.makefile('r')
-    msg = {"token": token, "directmessage": {"entry": message,"recipient": recipient, "timestamp": "1603167689.3928561"}}
-    send.write(json.dumps(msg) + '\r\n')
-    send.flush()
-    resp = recv.readline()
-    print('resp: ' + resp)
-  except Exception as e:
-    print('er: ' + str(e))
+def send_msg(client, token, recipient, message):
+    try:
+        send = client.makefile('w')
+        recv = client.makefile('r')
+        msg = {"token": token,
+               "directmessage": {"entry": message,
+                                 "recipient": recipient,
+                                 "timestamp": time.time()}}
+        send.write(json.dumps(msg) + '\r\n')
+        send.flush()
+        resp = recv.readline()
+        print('resp: ' + resp)
+        if(json.loads(resp))['response']['type'] == 'ok':
+            print('ok')
+            return True
+        else:
+            return False
+    except Exception as e:
+        print('er: ' + str(e))
+        return False
 
-def recv_dm(client, token, type):
+def ret_friends(client, token, msgtype, prof):
   send = client.makefile('w')
   recv = client.makefile('r')
-  msg = {"token": token, "directmessage": type}
-  send.write(json.dumps(msg) + '\r\n')
-  send.flush()
-  resp = recv.readline()
-  tup = extract_json_dm(resp)
-  messages = tup.message
-  messageD = {}
-  messageL = []
-  for item in messages:
-    #print(item)
-    print(item)
-    mess = 'Message: ' + item['message'] + ' From: ' + item['from'] 
-    messageD[item['timestamp']] = mess
-    messageL.append(mess)
-
-  sortedL = sorted(messageD.items(),key=lambda item: item[1], reverse=True)
-  return sortedL
-  #if tup.type == 'ok':
-    #print(tup)
-
-def ret_friends(client, token, type):
-  send = client.makefile('w')
-  recv = client.makefile('r')
-  msg = {"token": token, "directmessage": type}
+  msg = {"token": token, "directmessage": msgtype}
   send.write(json.dumps(msg) + '\r\n')
   send.flush()
   resp = recv.readline()
@@ -107,9 +96,11 @@ def ret_friends(client, token, type):
   messages = tup.message
   friendL = []
   for item in messages:
-    print(item)
     if item['from'] not in friendL:
       friendL.append(item['from'])
+  for name in friendL:
+    prof.add_friend_list(name)
+
   return friendL
 
 def ret_msg_only(client, token, type):
@@ -127,17 +118,3 @@ def ret_msg_only(client, token, type):
     msgL.append(item['message'])
   return msgL
 
-def ret_msg_from_sender(client, token, sender, type):
-  send = client.makefile('w')
-  recv = client.makefile('r')
-  msg = {"token": token, "directmessage": type}
-  send.write(json.dumps(msg) + '\r\n')
-  send.flush()
-  resp = recv.readline()
-  tup = extract_json_dm(resp)
-  messages = tup.message
-  messageL = []
-  for message in messages:
-    if message['from'] == sender:
-      messageL.append(message['message'])
-  return messageL

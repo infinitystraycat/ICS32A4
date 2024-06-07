@@ -1,5 +1,3 @@
-# Profile.py
-#
 # ICS 32
 # Assignment #2: Journal
 #
@@ -31,11 +29,8 @@ catch in your own code.
 It is raised when attempting to load or save Profile objects
 to file the system.
 """
-
-
 class DsuFileError(Exception):
     pass
-
 
 """
 DsuProfileError is a custom exception handler that you
@@ -115,6 +110,7 @@ class Profile:
         self._posts = []            # OPTIONAL
         self._friendList = []
         self._messageList = []
+        self._sentMessageList = []
 
     """
 
@@ -172,7 +168,6 @@ class Profile:
             raise DsuFileError("Invalid DSU file path or type")
 
     """
-
     load_profile will populate the current instance of Profile with
     data stored in a DSU file.
     Example usage:
@@ -182,7 +177,7 @@ class Profile:
     """
     def load_profile(self, path: str) -> None:
         p = Path(path)
-
+        print(p.exists())
         if p.exists() and p.suffix == '.dsu':
             try:
                 f = open(p, 'r')
@@ -196,34 +191,51 @@ class Profile:
                     self._posts.append(post)
                 self._friendList = obj['_friendList']
                 self._messageList = obj['_messageList']
+                self._sentMessageList = obj['_sentMessageList']
                 f.close()
             except Exception as ex:
                 raise DsuProfileError(ex)
         else:
             raise DsuFileError()
-        
-    def add_friend_list(self, nameL) -> None:
-        for name in nameL:
-            if name not in self._friendList:
-                self._friendList.append(name)
+
+    def add_friend_list(self, name) -> None:
+        if name not in self._friendList:
+            self._friendList.append(name)
     
     def print_friend_list(self):
-        #print('list')
-        #print(self._friendList)
         for friend in self._friendList:
             print(friend)
-        
+
+    def get_friend_list(self):
+        return self._friendList
+
     def add_retrieved_messages(self, newmessages: list) -> None:
-        #print('msg')
         for messages in newmessages:
             self._messageList.append(messages)
-        #self._messageList.append(newmessages)
-        
-    def print_all_recv_msg(self):
-        #print('msglist')
-        #print(self._messageList)
-        for messages in self._messageList:
-            print(messages)
-        
 
+    def add_message_ret(self, message):
+        self._messageList.append(message)
 
+    def get_all_recv_msg(self):
+        return self._messageList
+
+    def add_to_sent_messages(self, message):
+        self._sentMessageList.append(message)
+    
+    def get_recv_messages_recipient(self, recipient):
+        temp = []
+        print(self._messageList)
+        for item in self._messageList:
+            if item["recipient"] == recipient:
+                temp.append(item)
+        return temp
+
+    def get_all_sent_messages(self):
+        return self._sentMessageList
+
+    def get_sent_messages_recipient(self, recipient):
+        temp = []
+        for item in self._sentMessageList:
+            if item["recipient"] == recipient:
+                temp.append(item)
+        return temp
